@@ -56,8 +56,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Erreur API ${res.status}`);
+    let detail = `Erreur API ${res.status}`;
+    try {
+      const body = await res.json();
+      if (body?.message) {
+        detail = Array.isArray(body.message)
+          ? body.message.join(', ')
+          : String(body.message);
+      }
+    } catch {
+      const text = await res.text().catch(() => '');
+      if (text) detail = text;
+    }
+    throw new Error(detail);
   }
   return res.json() as Promise<T>;
 }
@@ -73,7 +84,13 @@ export const api = {
       player: Player;
       nextStep: 'SCENE' | 'MATCH' | 'DONE';
       loopHint: string;
-      lastMatch: { narrative: string; won: boolean; scoreline: string } | null;
+      lastMatch: {
+        narrative: string;
+        won: boolean;
+        scoreline: string;
+        rewardCash: number;
+        rewardCelebrity: number;
+      } | null;
     }>(`/career/${playerId}/hub`),
 
   currentScene: (playerId: string) =>

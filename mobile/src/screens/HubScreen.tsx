@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, type Player } from '../api';
 import {
   Body,
@@ -22,20 +23,37 @@ export function HubScreen({ navigation, route }: Props) {
   const [hint, setHint] = useState('');
   const [nextStep, setNextStep] = useState<'SCENE' | 'MATCH' | 'DONE'>('SCENE');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const resetCareer = useCallback(async () => {
+    await AsyncStorage.removeItem('playerId');
+    navigation.replace('Create');
+  }, [navigation]);
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const hub = await api.hub(playerId);
       setPlayer(hub.player);
       setHint(hub.loopHint);
       setNextStep(hub.nextStep);
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Hub indisponible');
+      const msg = e instanceof Error ? e.message : 'Hub indisponible';
+      setError(msg);
+      setPlayer(null);
+      if (/introuvable|Not Found|404/i.test(msg)) {
+        await AsyncStorage.removeItem('playerId');
+        Alert.alert(
+          'Profil expiré',
+          'La session serveur a été réinitialisée. Crée un nouveau joueur.',
+          [{ text: 'OK', onPress: () => navigation.replace('Create') }],
+        );
+      }
     } finally {
       setLoading(false);
     }
-  }, [playerId]);
+  }, [navigation, playerId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -47,7 +65,10 @@ export function HubScreen({ navigation, route }: Props) {
     return (
       <Screen>
         <Title>Carrière</Title>
-        <Subtitle>Chargement du hub…</Subtitle>
+        <Subtitle>{error ? error : 'Chargement du hub…'}</Subtitle>
+        {error ? (
+          <PrimaryButton label="Nouvelle carrière" onPress={resetCareer} />
+        ) : null}
       </Screen>
     );
   }
@@ -86,6 +107,7 @@ export function HubScreen({ navigation, route }: Props) {
             onPress={() => navigation.navigate('Reward', { playerId })}
           />
         )}
+        <PrimaryButton label="Nouvelle carrière" onPress={resetCareer} />
       </ScrollView>
     </Screen>
   );

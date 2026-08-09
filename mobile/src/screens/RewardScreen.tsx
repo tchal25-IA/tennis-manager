@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, type MatchReward, type Player } from '../api';
 import {
   Body,
@@ -25,20 +26,28 @@ export function RewardScreen({ navigation, route }: Props) {
       try {
         const hub = await api.hub(playerId);
         setPlayer(hub.player);
-        if (!reward && hub.lastMatch) {
+        if (!passed && hub.lastMatch) {
           setReward({
-            cash: 0,
-            celebrity: 0,
+            cash: hub.lastMatch.rewardCash,
+            celebrity: hub.lastMatch.rewardCelebrity,
             won: hub.lastMatch.won,
             scoreline: hub.lastMatch.scoreline,
             narrative: hub.lastMatch.narrative,
           });
         }
       } catch (e) {
-        Alert.alert('Erreur', e instanceof Error ? e.message : 'Reward indisponible');
+        Alert.alert(
+          'Erreur',
+          e instanceof Error ? e.message : 'Reward indisponible',
+        );
       }
     })();
-  }, [playerId, reward]);
+  }, [playerId, passed]);
+
+  async function newCareer() {
+    await AsyncStorage.removeItem('playerId');
+    navigation.replace('Create');
+  }
 
   return (
     <Screen>
@@ -52,21 +61,16 @@ export function RewardScreen({ navigation, route }: Props) {
           <>
             <Text style={styles.score}>{reward.scoreline}</Text>
             <Body>{reward.narrative}</Body>
-            {passed && (
-              <Body>
-                +{passed.cash} € · +{passed.celebrity} célébrité
-              </Body>
-            )}
+            <Body>
+              +{reward.cash} € · +{reward.celebrity} célébrité
+            </Body>
           </>
         )}
         <PrimaryButton
           label="Retour au hub"
           onPress={() => navigation.replace('Hub', { playerId })}
         />
-        <PrimaryButton
-          label="Nouvelle carrière"
-          onPress={() => navigation.replace('Create')}
-        />
+        <PrimaryButton label="Nouvelle carrière" onPress={newCareer} />
       </ScrollView>
     </Screen>
   );
