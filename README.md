@@ -37,4 +37,4 @@ tennis-manager/
 └── mobile/    Expo + React Native (web/iOS/Android)
 ```
 
-Voir [`PHASE-0-CADRAGE.md`](PHASE-0-CADRAGE.md) et [`SPECIFICATIONS.md`](SPECIFICATIONS.md).
+Voir [`PHASE-0-CADRAGE.md`](PHASE-0-CADRAGE.md), [`SPECIFICATIONS.md`](SPECIFICATIONS.md) et [`DEMARRER.md`](DEMARRER.md) (reprise Mac / iPhone Cursor).
