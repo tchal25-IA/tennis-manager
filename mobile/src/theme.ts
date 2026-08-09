@@ -1,13 +1,25 @@
 export const colors = {
-  court: '#0B3D2E',
+  brand: '#0B3D2E',
+  brandDeep: '#06261C',
+  grass: '#1F6B4F',
+  ball: '#C5DE2F',
   clay: '#C45C26',
-  line: '#F4F7F5',
-  ink: '#12201A',
-  mist: '#E6EFEA',
-  accent: '#F0C75E',
+  chalk: '#F3F7F4',
+  ink: '#12241C',
+  muted: '#5A7366',
+  mist: '#E7F0EA',
+  sky: '#C9DDD2',
+  card: 'rgba(255,255,255,0.92)',
   danger: '#B33A3A',
-  muted: '#5C7268',
-  card: '#FFFFFF',
+  win: '#1B7A4A',
+  line: '#FFFFFF',
+};
+
+export const fonts = {
+  display: 'Archivo Black',
+  body: 'Source Sans 3',
+  bodySemi: 'Source Sans 3',
+  bodyBold: 'Source Sans 3',
 };
 
 export const spacing = {

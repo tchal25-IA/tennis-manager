@@ -5,16 +5,33 @@ import { useFocusEffect } from '@react-navigation/native';
 import { api, type Player, type Scene } from '../api';
 import {
   Body,
+  BrandMark,
   ChoiceButton,
+  FadeIn,
   Screen,
   StatsBar,
   Subtitle,
   Title,
 } from '../components/ui';
-import { colors, spacing } from '../theme';
+import { colors, fonts, spacing } from '../theme';
 import type { RootStackParamList } from '../navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Scene'>;
+
+function impactHint(c: Scene['choices'][number]) {
+  const parts: string[] = [];
+  if (c.deltaTechnique) parts.push(`Tech ${fmt(c.deltaTechnique)}`);
+  if (c.deltaEndurance) parts.push(`Endu ${fmt(c.deltaEndurance)}`);
+  if (c.deltaMental) parts.push(`Mental ${fmt(c.deltaMental)}`);
+  if (c.deltaCelebrity) parts.push(`Célébrité ${fmt(c.deltaCelebrity)}`);
+  if (c.deltaCash) parts.push(`Cash ${fmt(c.deltaCash)}€`);
+  if (c.deltaMorale) parts.push(`Moral ${fmt(c.deltaMorale)}`);
+  return parts.join(' · ');
+}
+
+function fmt(n: number) {
+  return n > 0 ? `+${n}` : `${n}`;
+}
 
 export function SceneScreen({ navigation, route }: Props) {
   const { playerId } = route.params;
@@ -62,7 +79,8 @@ export function SceneScreen({ navigation, route }: Props) {
   if (!player || !scene) {
     return (
       <Screen>
-        <Title>Narratif</Title>
+        <BrandMark />
+        <Title>Histoire</Title>
         <Subtitle>Chargement de la scène…</Subtitle>
       </Screen>
     );
@@ -71,19 +89,24 @@ export function SceneScreen({ navigation, route }: Props) {
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
-        <Title>{scene.title}</Title>
-        <Subtitle>
-          Scène {scene.orderIndex + 1}/3 · {scene.speaker}
-        </Subtitle>
+        <BrandMark />
+        <FadeIn>
+          <Title>{scene.title}</Title>
+          <Subtitle>
+            Scène {scene.orderIndex + 1}/3 · {scene.speaker}
+          </Subtitle>
+        </FadeIn>
         <StatsBar player={player} />
         <View style={styles.dialogue}>
           <Text style={styles.speaker}>{scene.speaker}</Text>
           <Body>{scene.body}</Body>
         </View>
-        {scene.choices.map((c) => (
+        {scene.choices.map((c, index) => (
           <ChoiceButton
             key={c.id}
+            index={index}
             label={busy ? '…' : c.label}
+            hint={busy ? undefined : impactHint(c)}
             onPress={() => !busy && choose(c.id)}
           />
         ))}
@@ -96,15 +119,16 @@ const styles = StyleSheet.create({
   content: { paddingBottom: spacing.xl },
   dialogue: {
     backgroundColor: colors.card,
-    borderRadius: 12,
+    borderRadius: 4,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderLeftWidth: 4,
     borderLeftColor: colors.clay,
   },
   speaker: {
-    fontWeight: '700',
-    color: colors.court,
+    fontFamily: fonts.display,
+    color: colors.brand,
     marginBottom: 6,
+    fontSize: 16,
   },
 });

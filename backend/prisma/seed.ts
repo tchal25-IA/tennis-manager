@@ -129,7 +129,7 @@ async function main() {
     });
   }
 
-  console.log('Seed OK — 3 scènes narratif junior');
+  console.log('Seed OK — 3 scènes narratif junior (FR)');
 }
 
 main()

@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Platform,
+  Text,
+  View,
+} from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
@@ -10,15 +15,34 @@ import { SceneScreen } from './src/screens/SceneScreen';
 import { MatchScreen } from './src/screens/MatchScreen';
 import { RewardScreen } from './src/screens/RewardScreen';
 import type { RootStackParamList } from './src/navigation';
-import { colors } from './src/theme';
+import { colors, fonts } from './src/theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+function loadWebFonts() {
+  if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+  const id = 'tennis-manager-fonts';
+  if (document.getElementById(id)) return;
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  link.href =
+    'https://fonts.googleapis.com/css2?family=Archivo+Black&family=Source+Sans+3:wght@400;600;700&display=swap';
+  document.head.appendChild(link);
+
+  const style = document.createElement('style');
+  style.textContent = `
+    body, #root { font-family: 'Source Sans 3', system-ui, sans-serif; }
+  `;
+  document.head.appendChild(style);
+}
 
 export default function App() {
   const [ready, setReady] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
 
   useEffect(() => {
+    loadWebFonts();
     AsyncStorage.getItem('playerId').then((id) => {
       setPlayerId(id);
       setReady(true);
@@ -35,7 +59,18 @@ export default function App() {
           backgroundColor: colors.mist,
         }}
       >
-        <ActivityIndicator color={colors.court} />
+        <Text
+          style={{
+            fontFamily: fonts.display,
+            color: colors.brand,
+            fontSize: 22,
+            marginBottom: 12,
+            letterSpacing: 1,
+          }}
+        >
+          TENNIS MANAGER
+        </Text>
+        <ActivityIndicator color={colors.brand} />
       </View>
     );
   }
@@ -46,27 +81,32 @@ export default function App() {
       <Stack.Navigator
         initialRouteName={playerId ? 'Hub' : 'Create'}
         screenOptions={{
-          headerStyle: { backgroundColor: colors.court },
-          headerTintColor: colors.line,
-          headerTitleStyle: { fontWeight: '700' },
+          headerStyle: { backgroundColor: colors.brand },
+          headerTintColor: colors.chalk,
+          headerTitleStyle: {
+            fontFamily: fonts.display,
+            fontWeight: '400',
+            fontSize: 16,
+          },
           contentStyle: { backgroundColor: colors.mist },
+          animation: 'fade',
         }}
       >
         <Stack.Screen
           name="Create"
           component={CreateScreen}
-          options={{ title: 'Nouveau joueur' }}
+          options={{ title: 'Nouveau joueur', headerShown: false }}
         />
         <Stack.Screen
           name="Hub"
           component={HubScreen}
           initialParams={playerId ? { playerId } : undefined}
-          options={{ title: 'Hub' }}
+          options={{ title: 'Hub carrière' }}
         />
         <Stack.Screen
           name="Scene"
           component={SceneScreen}
-          options={{ title: 'Narratif' }}
+          options={{ title: 'Histoire' }}
         />
         <Stack.Screen
           name="Match"

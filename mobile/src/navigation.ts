@@ -12,5 +12,7 @@ export type RootStackParamList = {
       scoreline: string;
       narrative: string;
     };
+    timeline?: { phase: string; title: string; detail: string }[];
+    opponentName?: string;
   };
 };

@@ -48,6 +48,28 @@ export type MatchReward = {
   narrative: string;
 };
 
+export type MatchBeat = {
+  phase: string;
+  title: string;
+  detail: string;
+};
+
+export type HubResponse = {
+  player: Player;
+  nextStep: 'SCENE' | 'MATCH' | 'DONE';
+  loopHint: string;
+  matchesPlayed: number;
+  canRematch: boolean;
+  lastMatch: {
+    narrative: string;
+    won: boolean;
+    scoreline: string;
+    rewardCash: number;
+    rewardCelebrity: number;
+    opponentName?: string;
+  } | null;
+};
+
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001/api';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -79,19 +101,10 @@ export const api = {
 
   getPlayer: (id: string) => request<Player>(`/players/${id}`),
 
-  hub: (playerId: string) =>
-    request<{
-      player: Player;
-      nextStep: 'SCENE' | 'MATCH' | 'DONE';
-      loopHint: string;
-      lastMatch: {
-        narrative: string;
-        won: boolean;
-        scoreline: string;
-        rewardCash: number;
-        rewardCelebrity: number;
-      } | null;
-    }>(`/career/${playerId}/hub`),
+  hub: (playerId: string) => request<HubResponse>(`/career/${playerId}/hub`),
+
+  rematch: (playerId: string) =>
+    request<HubResponse>(`/career/${playerId}/rematch`, { method: 'POST' }),
 
   currentScene: (playerId: string) =>
     request<{ done: boolean; player: Player; scene: Scene | null }>(
@@ -111,9 +124,16 @@ export const api = {
     playerId: string;
     surface: string;
     preMatchTactic: string;
-    keyMomentChoice: string;
+    rallyChoice: string;
+    breakChoice: string;
+    finishChoice: string;
   }) =>
-    request<{ player: Player; reward: MatchReward }>('/match/play', {
+    request<{
+      player: Player;
+      reward: MatchReward;
+      opponent: { name: string };
+      timeline: MatchBeat[];
+    }>('/match/play', {
       method: 'POST',
       body: JSON.stringify(body),
     }),
