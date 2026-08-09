@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Joueur de carrière (vertical slice — auth guest via id)
+model Player {
+  id           String   @id @default(cuid())
+  firstName    String
+  lastName     String
+  nationality  String
+  playStyle    String // ATTACKER | DEFENDER | ALLROUND
+  socialOrigin String // MODEST | MIDDLE | PRIVILEGED
+  preferredSurface String // CLAY | GRASS | HARD
+  dominantHand String // LEFT | RIGHT
+  technique    Int      @default(65)
+  endurance    Int      @default(65)
+  mental       Int      @default(65)
+  celebrity    Int      @default(5)
+  cash         Int      @default(500)
+  morale       Int      @default(70)
+  form         Int      @default(70)
+  fatigue      Int      @default(10)
+  careerStage  String   @default("JUNIOR")
+  sceneIndex   Int      @default(0)
+  sliceDone    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  choices      SceneChoiceLog[]
+  matches      MatchResult[]
+}
+
+model Scene {
+  id          String @id @default(cuid())
+  orderIndex  Int    @unique
+  title       String
+  body        String
+  speaker     String
+  choices     SceneChoice[]
+}
+
+model SceneChoice {
+  id            String @id @default(cuid())
+  sceneId       String
+  scene         Scene  @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  label         String
+  deltaTechnique Int   @default(0)
+  deltaEndurance Int   @default(0)
+  deltaMental    Int   @default(0)
+  deltaCelebrity Int   @default(0)
+  deltaCash      Int   @default(0)
+  deltaMorale    Int   @default(0)
+  logs          SceneChoiceLog[]
+}
+
+model SceneChoiceLog {
+  id        String   @id @default(cuid())
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  choiceId  String
+  choice    SceneChoice @relation(fields: [choiceId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model MatchResult {
+  id              String   @id @default(cuid())
+  playerId        String
+  player          Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  opponentName    String
+  surface         String
+  preMatchTactic  String
+  keyMomentChoice String
+  won             Boolean
+  scoreline       String
+  rewardCash      Int
+  rewardCelebrity Int
+  narrative       String
+  createdAt       DateTime @default(now())
+}

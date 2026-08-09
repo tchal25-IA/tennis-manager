@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "buildCommand": "prisma generate && nest build && node scripts/bake-db.js",
+  "installCommand": "npm install",
+  "functions": {
+    "api/index.ts": {
+      "maxDuration": 60,
+      "memory": 1024,
+      "includeFiles": "prisma/**"
+    }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api" }
+  ]
+}

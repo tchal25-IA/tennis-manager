@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Tennis Manager",
+    "slug": "tennis-manager",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0B3D2E"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tennismanager.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0B3D2E"
+      },
+      "package": "com.tennismanager.app"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

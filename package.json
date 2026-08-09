@@ -1,0 +1,16 @@
+{
+  "name": "tennis-manager",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Tennis Manager — fiction interactive de gestion de carrière",
+  "scripts": {
+    "backend:install": "npm install --prefix backend",
+    "mobile:install": "npm install --prefix mobile",
+    "install:all": "npm run backend:install && npm run mobile:install",
+    "backend:dev": "npm run start:dev --prefix backend",
+    "mobile:start": "npm start --prefix mobile",
+    "db:migrate": "npm run prisma:migrate --prefix backend",
+    "db:seed": "npm run prisma:seed --prefix backend",
+    "setup": "npm run install:all && npm run db:migrate && npm run db:seed"
+  }
+}

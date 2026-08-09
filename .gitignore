@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.expo/
+*.log
+.env
+.env.local
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+backend/prisma/*.db-journal
+!backend/prisma/seed.db
+mobile/node_modules/
+backend/node_modules/
+.DS_Store
+coverage/
+.vercel/
+mobile/dist/
