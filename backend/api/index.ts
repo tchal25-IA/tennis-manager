@@ -2,8 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import express, { Express, Request, Response } from 'express';
-import { AppModule } from './app.module';
-import { ensureDatabase } from './bootstrap-db';
+import { AppModule } from '../src/app.module';
+import { ensureDatabase } from '../src/bootstrap-db';
 
 let cached: Express | null = null;
 
