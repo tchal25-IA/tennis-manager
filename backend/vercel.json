@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "prisma generate && nest build && node scripts/bake-db.js",
+  "buildCommand": "npx prisma generate && npx nest build && node scripts/bake-db.js",
   "installCommand": "npm install",
   "functions": {
     "api/index.ts": {
