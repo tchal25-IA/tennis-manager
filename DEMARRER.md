@@ -24,3 +24,4 @@ Tu peux aussi : **New Agent → From GitHub Repo** → `tchal25-IA/tennis-manage
 4. Pour jouer : Safari → https://tennis-manager-one.vercel.app
 
 > L’app iPhone Cursor pilote surtout le code via agents cloud. Le build Expo natif iOS reste sur Mac (Xcode / EAS). Le vertical slice web est jouable sur iPhone via Safari.
+Redeploy triggered 2026-08-09T15:08:43Z
