@@ -38,3 +38,15 @@ tennis-manager/
 ```
 
 Voir [`PHASE-0-CADRAGE.md`](PHASE-0-CADRAGE.md), [`SPECIFICATIONS.md`](SPECIFICATIONS.md) et [`DEMARRER.md`](DEMARRER.md) (reprise Mac / iPhone Cursor).
+
+## Déploiement Cloudflare Worker (preview)
+
+Stack autonome (front Expo + API in-memory) :
+
+```bash
+cd mobile && EXPO_PUBLIC_API_URL=/api npx expo export --platform web
+rm -rf ../deploy/cf-worker/assets && cp -a dist ../deploy/cf-worker/assets
+cd ../deploy/cf-worker && npx wrangler deploy --temporary
+```
+
+Claim preview account: see wrangler output `Claim URL`.
