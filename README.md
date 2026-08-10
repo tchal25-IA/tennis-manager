@@ -7,7 +7,9 @@ Vertical slice : création joueur → 3 scènes → 1 match tactique → récomp
 
 | | URL |
 |--|-----|
-| **App web** | https://tennis-manager-one.vercel.app |
+| **App web (live)** | https://amino-prospective-fourth-ebony.trycloudflare.com |
+| **App web (Vercel)** | https://tennis-manager-one.vercel.app (ancien build — Git deploy KO) |
+| **Worker CF preview** | https://tennis-manager.invited-iguanadon-ddd.workers.dev |
 | **API** | https://tennis-manager-api.vercel.app/api |
 | **GitHub** | https://github.com/tchal25-IA/tennis-manager |
 

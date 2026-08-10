@@ -15,3 +15,6 @@ coverage/
 .vercel/
 mobile/dist/
 serve-demo.js
+deploy/cf-worker/.wrangler/
+deploy/cf-worker/assets/
+mobile/dist/
