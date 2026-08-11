@@ -68,6 +68,11 @@ export class MatchService {
         'Termine les 3 scènes narratives avant le match',
       );
     }
+    if (!player.trainingDone) {
+      throw new BadRequestException(
+        'Effectue d’abord un entraînement avant le match tactique',
+      );
+    }
     if (player.sliceDone) {
       throw new BadRequestException(
         'Match déjà joué — relance un match depuis le hub',

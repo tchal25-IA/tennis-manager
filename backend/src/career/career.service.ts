@@ -19,9 +19,11 @@ export class CareerService {
     });
     if (!player) throw new NotFoundException('Joueur introuvable');
 
-    let nextStep: 'SCENE' | 'MATCH' | 'DONE' = 'SCENE';
+    let nextStep: 'SCENE' | 'TRAINING' | 'MATCH' | 'DONE' = 'SCENE';
     if (player.sliceDone) nextStep = 'DONE';
-    else if (player.sceneIndex >= 3) nextStep = 'MATCH';
+    else if (player.sceneIndex >= 3 && !player.trainingDone)
+      nextStep = 'TRAINING';
+    else if (player.sceneIndex >= 3 && player.trainingDone) nextStep = 'MATCH';
 
     const lastMatch = await this.prisma.matchResult.findFirst({
       where: { playerId },
@@ -40,10 +42,12 @@ export class CareerService {
       canRematch: player.sliceDone === true,
       loopHint:
         nextStep === 'SCENE'
-          ? 'Un événement t’attend à l’académie'
-          : nextStep === 'MATCH'
-            ? 'Ton match junior est prêt — entre sur le court'
-            : 'Slice terminée — rejoue un match ou lance une nouvelle carrière',
+          ? 'Événement narratif en attente'
+          : nextStep === 'TRAINING'
+            ? 'Entraînement avant le match tactique'
+            : nextStep === 'MATCH'
+              ? 'Ton match junior est prêt — entre sur le court'
+              : 'Slice terminée — rejoue un match ou lance une nouvelle carrière',
     };
   }
 

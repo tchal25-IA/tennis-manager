@@ -29,6 +29,7 @@ model Player {
   careerStage  String   @default("JUNIOR")
   sceneIndex   Int      @default(0)
   sliceDone    Boolean  @default(false)
+  trainingDone Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   choices      SceneChoiceLog[]

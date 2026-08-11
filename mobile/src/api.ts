@@ -56,7 +56,7 @@ export type MatchBeat = {
 
 export type HubResponse = {
   player: Player;
-  nextStep: 'SCENE' | 'MATCH' | 'DONE';
+  nextStep: 'SCENE' | 'TRAINING' | 'MATCH' | 'DONE';
   loopHint: string;
   matchesPlayed: number;
   canRematch: boolean;
@@ -134,6 +134,20 @@ export const api = {
       opponent: { name: string };
       timeline: MatchBeat[];
     }>('/match/play', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  trainingOptions: (playerId: string) =>
+    request<{ alreadyTrained: boolean; trainings: any[]; player: Player }>(
+      `/training/${playerId}/options`,
+    ),
+
+  doTraining: (body: {
+    playerId: string;
+    trainingType: 'PHYSIQUE' | 'TECHNIQUE' | 'MENTAL';
+  }) =>
+    request<{ player: Player; trainingType: string }>('/training/do', {
       method: 'POST',
       body: JSON.stringify(body),
     }),

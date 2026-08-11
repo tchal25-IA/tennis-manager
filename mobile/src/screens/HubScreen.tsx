@@ -31,7 +31,9 @@ export function HubScreen({ navigation, route }: Props) {
   const { playerId } = route.params;
   const [player, setPlayer] = useState<Player | null>(null);
   const [hint, setHint] = useState('');
-  const [nextStep, setNextStep] = useState<'SCENE' | 'MATCH' | 'DONE'>('SCENE');
+  const [nextStep, setNextStep] = useState<
+    'SCENE' | 'TRAINING' | 'MATCH' | 'DONE'
+  >('SCENE');
   const [matchesPlayed, setMatchesPlayed] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -147,6 +149,12 @@ export function HubScreen({ navigation, route }: Props) {
             variant="ball"
             label="Continuer l’histoire"
             onPress={() => navigation.navigate('Scene', { playerId })}
+          />
+        )}
+        {nextStep === 'TRAINING' && (
+          <PrimaryButton
+            label="Faire un entraînement"
+            onPress={() => navigation.navigate('Training', { playerId })}
           />
         )}
         {nextStep === 'MATCH' && (

@@ -2,6 +2,7 @@ export type RootStackParamList = {
   Create: undefined;
   Hub: { playerId: string };
   Scene: { playerId: string };
+  Training: { playerId: string };
   Match: { playerId: string };
   Reward: {
     playerId: string;

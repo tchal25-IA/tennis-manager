@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CreateScreen } from './src/screens/CreateScreen';
 import { HubScreen } from './src/screens/HubScreen';
 import { SceneScreen } from './src/screens/SceneScreen';
+import { TrainingScreen } from './src/screens/TrainingScreen';
 import { MatchScreen } from './src/screens/MatchScreen';
 import { RewardScreen } from './src/screens/RewardScreen';
 import type { RootStackParamList } from './src/navigation';
@@ -107,6 +108,11 @@ export default function App() {
           name="Scene"
           component={SceneScreen}
           options={{ title: 'Histoire' }}
+        />
+        <Stack.Screen
+          name="Training"
+          component={TrainingScreen}
+          options={{ title: 'Entraînement' }}
         />
         <Stack.Screen
           name="Match"

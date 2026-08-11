@@ -4,6 +4,7 @@ import { PlayerModule } from './player/player.module';
 import { NarrativeModule } from './narrative/narrative.module';
 import { MatchModule } from './match/match.module';
 import { CareerModule } from './career/career.module';
+import { TrainingModule } from './training/training.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { CareerModule } from './career/career.module';
     NarrativeModule,
     MatchModule,
     CareerModule,
+    TrainingModule,
   ],
 })
 export class AppModule {}
