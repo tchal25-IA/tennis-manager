@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     fontSize: 16,
     fontWeight: '700',
-    color: colors.court,
+    color: colors.brand,
   },
   note: {
     marginTop: spacing.md,
