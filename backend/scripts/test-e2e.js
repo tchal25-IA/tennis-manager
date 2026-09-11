@@ -49,12 +49,15 @@ async function main() {
     // 1️⃣ Création du joueur
     console.log('\n1️⃣  CRÉATION DU JOUEUR');
     const player = await request('POST', '/player', {
-      name: 'Lucas Martin',
+      firstName: 'Lucas',
+      lastName: 'Martin',
       nationality: 'FR',
-      height: 182,
-      handedness: 'RIGHT',
+      playStyle: 'ALLROUND',
+      socialOrigin: 'MIDDLE',
+      preferredSurface: 'CLAY',
+      dominantHand: 'RIGHT',
     });
-    console.log(`✅ Joueur créé: ${player.name} (${player.id})\n`);
+    console.log(`✅ Joueur créé: ${player.firstName} ${player.lastName} (${player.id})\n`);
     const playerId = player.id;
 
     await sleep(500);
