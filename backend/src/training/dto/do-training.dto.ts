@@ -4,7 +4,7 @@ export class DoTrainingDto {
   @IsString()
   playerId: string;
 
-  @IsIn(['PHYSIQUE', 'TECHNIQUE', 'MENTAL'])
-  trainingType: 'PHYSIQUE' | 'TECHNIQUE' | 'MENTAL';
+  @IsIn(['SERVE', 'FOREHAND', 'BACKHAND', 'PHYSIQUE', 'MENTAL'])
+  trainingType: 'SERVE' | 'FOREHAND' | 'BACKHAND' | 'PHYSIQUE' | 'MENTAL';
 }
 

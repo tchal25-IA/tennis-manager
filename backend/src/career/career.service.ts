@@ -34,12 +34,41 @@ export class CareerService {
       where: { playerId },
     });
 
+    const wins = await this.prisma.matchResult.count({
+      where: { playerId, won: true },
+    });
+
+    const losses = matchesPlayed - wins;
+    const winRate = matchesPlayed > 0 ? Math.round((wins / matchesPlayed) * 100) : 0;
+
+    const recentMatches = await this.prisma.matchResult.findMany({
+      where: { playerId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: {
+        opponentName: true,
+        won: true,
+        scoreline: true,
+        tournamentName: true,
+        round: true,
+        createdAt: true,
+      },
+    });
+
     return {
       player,
       nextStep,
       lastMatch,
       matchesPlayed,
       canRematch: player.sliceDone === true,
+      stats: {
+        wins,
+        losses,
+        winRate,
+        tournamentsWon: player.tournamentsWon,
+        currentSeason: player.currentSeason,
+      },
+      recentMatches,
       loopHint:
         nextStep === 'SCENE'
           ? 'Événement narratif en attente'

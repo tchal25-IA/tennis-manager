@@ -21,12 +21,17 @@ model Player {
   technique    Int      @default(65)
   endurance    Int      @default(65)
   mental       Int      @default(65)
+  serve        Int      @default(60)
+  forehand     Int      @default(62)
+  backhand     Int      @default(61)
   celebrity    Int      @default(5)
   cash         Int      @default(500)
   morale       Int      @default(70)
   form         Int      @default(70)
   fatigue      Int      @default(10)
   careerStage  String   @default("JUNIOR")
+  currentSeason Int     @default(1)
+  tournamentsWon Int    @default(0)
   sceneIndex   Int      @default(0)
   sliceDone    Boolean  @default(false)
   trainingDone Boolean  @default(false)
@@ -73,7 +78,10 @@ model MatchResult {
   playerId        String
   player          Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
   opponentName    String
+  opponentRank    Int      @default(0)
   surface         String
+  tournamentName  String   @default("Circuit Junior")
+  round           String   @default("1er tour")
   preMatchTactic  String
   keyMomentChoice String
   won             Boolean
@@ -81,5 +89,6 @@ model MatchResult {
   rewardCash      Int
   rewardCelebrity Int
   narrative       String
+  phases          String   @default("")
   createdAt       DateTime @default(now())
 }

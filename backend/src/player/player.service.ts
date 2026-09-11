@@ -14,6 +14,9 @@ export class PlayerService {
     let technique = 65;
     let endurance = 65;
     let mental = 65;
+    let serve = 60;
+    let forehand = 62;
+    let backhand = 61;
     let celebrity = 5;
     let cash = 500;
 
@@ -22,17 +25,30 @@ export class PlayerService {
         technique += 5;
         mental += 2;
         endurance -= 2;
+        serve += 3;
+        forehand += 4;
+        backhand -= 1;
         break;
       case 'DEFENDER':
         endurance += 5;
         mental += 2;
         technique -= 1;
+        backhand += 4;
+        forehand += 1;
         break;
       case 'ALLROUND':
         technique += 2;
         endurance += 2;
         mental += 2;
+        serve += 2;
+        forehand += 2;
+        backhand += 2;
         break;
+    }
+
+    if (dto.dominantHand === 'LEFT') {
+      serve += 1;
+      celebrity += 1;
     }
 
     switch (dto.socialOrigin) {
@@ -56,6 +72,9 @@ export class PlayerService {
       technique: clamp(technique, 60, 100),
       endurance: clamp(endurance, 60, 100),
       mental: clamp(mental, 60, 100),
+      serve: clamp(serve, 55, 100),
+      forehand: clamp(forehand, 55, 100),
+      backhand: clamp(backhand, 55, 100),
       celebrity: clamp(celebrity),
       cash,
     };
