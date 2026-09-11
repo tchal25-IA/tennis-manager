@@ -92,7 +92,8 @@ async function main() {
       const choice = choices[0];
       console.log(`   → Choix: ${choice.text}`);
 
-      const result = await request('POST', `/narrative/${playerId}/resolve`, {
+      const result = await request('POST', `/narrative/choice`, {
+        playerId: playerId,
         choiceId: choice.id,
       });
       console.log(`   ✅ Résolu. Impact: ${JSON.stringify(result.impact || {})}`);
@@ -112,8 +113,9 @@ async function main() {
 
     // 5️⃣ Entraînement
     console.log('5️⃣  ENTRAÎNEMENT');
-    const training = await request('POST', `/training/${playerId}`, {
-      focus: 'SERVE',
+    const training = await request('POST', `/training/do`, {
+      playerId: playerId,
+      trainingType: 'SERVE',
     });
     console.log(`✅ Entraînement terminé`);
     console.log(`   Serve: ${training.player.serve}`);
@@ -132,8 +134,13 @@ async function main() {
 
     // 7️⃣ Match
     console.log('7️⃣  MATCH TACTIQUE');
-    const match = await request('POST', `/match/${playerId}/play`, {
-      tactic: 'BALANCED',
+    const match = await request('POST', `/match/play`, {
+      playerId: playerId,
+      surface: 'CLAY',
+      preMatchTactic: 'BALANCED',
+      rallyChoice: 'HIGH_PERCENTAGE',
+      breakChoice: 'MIX_PACE',
+      finishChoice: 'GO_FOR_WINNER',
     });
     
     console.log(`🎾 Match terminé!`);
@@ -176,8 +183,13 @@ async function main() {
 
     // 🔟 Deuxième match
     console.log('🔟 DEUXIÈME MATCH');
-    const match2 = await request('POST', `/match/${playerId}/play`, {
-      tactic: 'AGGRESSIVE',
+    const match2 = await request('POST', `/match/play`, {
+      playerId: playerId,
+      surface: 'HARD',
+      preMatchTactic: 'AGGRESSIVE',
+      rallyChoice: 'GO_FOR_WINNER',
+      breakChoice: 'GO_FOR_WINNER',
+      finishChoice: 'MIX_PACE',
     });
     console.log(`🎾 Match 2 terminé!`);
     console.log(`   Résultat: ${match2.result.won ? '🏆 VICTOIRE' : '😢 DÉFAITE'}`);
