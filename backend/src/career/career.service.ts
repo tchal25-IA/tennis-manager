@@ -46,7 +46,7 @@ export class CareerService {
       orderBy: { createdAt: 'desc' },
       take: 5,
       select: {
-        opponentName,
+        opponentName: true,
         won: true,
         scoreline: true,
         tournamentName: true,

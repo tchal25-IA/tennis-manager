@@ -160,7 +160,7 @@ export class MatchService {
     }
     if (!player.trainingDone) {
       throw new BadRequestException(
-        'Effectue d'abord un entraînement avant le match tactique',
+        "Effectue d'abord un entraînement avant le match tactique",
       );
     }
     if (player.sliceDone) {
