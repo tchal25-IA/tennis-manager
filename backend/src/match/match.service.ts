@@ -135,14 +135,16 @@ const OPPONENT_POOL: Opponent[] = [
   },
 ];
 
-const TOURNAMENTS = [
-  'Open Junior Nice Côte d\'Azur',
-  'Tournoi des Espoirs Lyon',
-  'Challenger Junior Bordeaux',
-  'ITF Junior Paris',
-  'Coupe Junior Marseille',
-  'Trophée Junior Monaco',
-];
+const SEASON_WEEKS = [
+  { name: 'Open de Nice', surface: 'CLAY' },
+  { name: 'Coupe des Alpes', surface: 'HARD' },
+  { name: 'Trophée de Lyon', surface: 'CLAY' },
+  { name: 'Open de Genève', surface: 'HARD' },
+  { name: 'Classic de Londres', surface: 'GRASS' },
+  { name: 'International de Paris', surface: 'CLAY' },
+  { name: 'Masters de Montréal', surface: 'HARD' },
+  { name: 'Finales Junior', surface: 'HARD' },
+] as const;
 
 @Injectable()
 export class MatchService {
@@ -187,10 +189,15 @@ export class MatchService {
         ? availableOpponents[Math.floor(Math.random() * availableOpponents.length)]
         : OPPONENT_POOL[Math.floor(Math.random() * OPPONENT_POOL.length)];
 
-    const tournament =
-      TOURNAMENTS[Math.floor(Math.random() * TOURNAMENTS.length)];
+    const scheduled = SEASON_WEEKS[player.currentWeek - 1] ?? SEASON_WEEKS[0];
+    if (dto.surface !== scheduled.surface) {
+      throw new BadRequestException(
+        `Ce tournoi se joue sur ${scheduled.surface}`,
+      );
+    }
+    const tournament = scheduled.name;
     const rounds = ['1er tour', 'Quart de finale', 'Demi-finale', 'Finale'];
-    const round = rounds[Math.min(matchesPlayed, rounds.length - 1)];
+    const round = rounds[matchesPlayed % rounds.length];
 
     const surfaceBonus =
       dto.surface === player.preferredSurface ? 0.09 : -0.03;
@@ -342,6 +349,13 @@ export class MatchService {
         : `Maîtrise totale sur ${surfaceFr}. Tu bats ${opponent.name} (${sets}). Les recruteurs notent ton nom, la carrière décolle.`
       : `Défaite formative face à ${opponent.name} (${opponent.nationality}, ${sets}). Tu sens exactement ce qu'il faut travailler — le prochain match sera différent.`;
 
+    const nextWeek = player.currentWeek >= SEASON_WEEKS.length ? 1 : player.currentWeek + 1;
+    const nextSeason =
+      player.currentWeek >= SEASON_WEEKS.length
+        ? player.currentSeason + 1
+        : player.currentSeason;
+    const rankingGain = won ? (round === 'Finale' ? 24 : 14) : 4;
+
     const updated = await this.prisma.player.update({
       where: { id: player.id },
       data: {
@@ -350,8 +364,13 @@ export class MatchService {
         morale: clamp(player.morale + (won ? 8 : -4)),
         fatigue: clamp(player.fatigue + 12),
         form: clamp(player.form + (won ? 4 : -2)),
+        ranking: Math.max(1, player.ranking - rankingGain),
         tournamentsWon: won && round === 'Finale' ? player.tournamentsWon + 1 : player.tournamentsWon,
-        sliceDone: true,
+        currentWeek: nextWeek,
+        currentSeason: nextSeason,
+        careerStage: nextSeason >= 2 ? 'PRO ESPOIR' : player.careerStage,
+        trainingDone: false,
+        sliceDone: false,
       },
     });
 

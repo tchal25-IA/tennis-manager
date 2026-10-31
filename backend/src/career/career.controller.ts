@@ -14,4 +14,14 @@ export class CareerController {
   rematch(@Param('playerId') playerId: string) {
     return this.careerService.rematch(playerId);
   }
+
+  @Post(':playerId/daily')
+  claimDaily(@Param('playerId') playerId: string) {
+    return this.careerService.claimDaily(playerId);
+  }
+
+  @Post(':playerId/staff/coach')
+  upgradeCoach(@Param('playerId') playerId: string) {
+    return this.careerService.upgradeCoach(playerId);
+  }
 }

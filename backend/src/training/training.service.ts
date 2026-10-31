@@ -82,37 +82,38 @@ export class TrainingService {
       throw new BadRequestException("Entraînement déjà effectué pour ce vertical slice");
     }
 
+    const coachBonus = Math.max(0, player.coachLevel - 1);
     const effects: Record<string, number> =
       dto.trainingType === 'SERVE'
         ? {
-            serve: 5,
-            technique: 2,
+            serve: 5 + coachBonus,
+            technique: 2 + coachBonus,
             morale: 1,
             fatigue: 12,
           }
         : dto.trainingType === 'FOREHAND'
           ? {
-              forehand: 5,
-              technique: 1,
+              forehand: 5 + coachBonus,
+              technique: 1 + coachBonus,
               morale: 1,
               fatigue: 10,
             }
           : dto.trainingType === 'BACKHAND'
             ? {
-                backhand: 5,
-                endurance: 2,
+                backhand: 5 + coachBonus,
+                endurance: 2 + coachBonus,
                 morale: 1,
                 fatigue: 10,
               }
             : dto.trainingType === 'PHYSIQUE'
               ? {
-                  endurance: 4,
-                  mental: 1,
+                  endurance: 4 + coachBonus,
+                  mental: 1 + coachBonus,
                   morale: 2,
                   fatigue: 15,
                 }
               : {
-                  mental: 4,
+                  mental: 4 + coachBonus,
                   celebrity: 1,
                   fatigue: 8,
                 };
@@ -138,6 +139,7 @@ export class TrainingService {
     return {
       player: updated,
       trainingType: dto.trainingType,
+      coachBonus,
     };
   }
 }

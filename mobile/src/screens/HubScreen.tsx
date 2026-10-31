@@ -11,9 +11,8 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api, type Player } from '../api';
+import { api, type HubResponse, type Player } from '../api';
 import {
-  Body,
   BrandMark,
   FadeIn,
   PrimaryButton,
@@ -32,9 +31,10 @@ export function HubScreen({ navigation, route }: Props) {
   const [player, setPlayer] = useState<Player | null>(null);
   const [hint, setHint] = useState('');
   const [nextStep, setNextStep] = useState<
-    'SCENE' | 'TRAINING' | 'MATCH' | 'DONE'
+    'SCENE' | 'DAILY' | 'TRAINING' | 'MATCH'
   >('SCENE');
   const [matchesPlayed, setMatchesPlayed] = useState(0);
+  const [career, setCareer] = useState<HubResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pulse = useRef(new Animated.Value(1)).current;
@@ -50,6 +50,7 @@ export function HubScreen({ navigation, route }: Props) {
       setError(null);
       const hub = await api.hub(playerId);
       setPlayer(hub.player);
+      setCareer(hub);
       setHint(hub.loopHint);
       setNextStep(hub.nextStep);
       setMatchesPlayed(hub.matchesPlayed ?? 0);
@@ -92,16 +93,33 @@ export function HubScreen({ navigation, route }: Props) {
     }, [load, pulse]),
   );
 
-  async function startRematch() {
+  async function claimDaily() {
     try {
       setLoading(true);
-      const hub = await api.rematch(playerId);
-      setPlayer(hub.player);
-      setNextStep(hub.nextStep);
-      setHint(hub.loopHint);
-      navigation.navigate('Match', { playerId });
+      const reward = await api.claimDaily(playerId);
+      Alert.alert(
+        'Récompense récupérée',
+        `+${reward.amount} € · série de ${reward.streak} jour${reward.streak > 1 ? 's' : ''}`,
+      );
+      await load();
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Rematch impossible');
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Récompense indisponible');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function upgradeCoach() {
+    try {
+      setLoading(true);
+      const result = await api.upgradeCoach(playerId);
+      Alert.alert(
+        'Staff renforcé',
+        `Coach niveau ${result.player.coachLevel} · +${result.trainingBonus} sur les gains d’entraînement`,
+      );
+      await load();
+    } catch (e) {
+      Alert.alert('Recrutement', e instanceof Error ? e.message : 'Amélioration impossible');
     } finally {
       setLoading(false);
     }
@@ -138,11 +156,27 @@ export function HubScreen({ navigation, route }: Props) {
           <View style={styles.banner}>
             <Text style={styles.bannerLabel}>Étape</Text>
             <Text style={styles.bannerValue}>
-              {player.careerStage} · Scènes {Math.min(player.sceneIndex, 3)}/3 ·
-              Matchs {matchesPlayed}
+              Saison {player.currentSeason} · Semaine {player.currentWeek}/8 · Rang {player.ranking}
             </Text>
           </View>
         </Animated.View>
+
+        {career ? (
+          <View style={styles.dashboardRow}>
+            <View style={styles.metric}>
+              <Text style={styles.metricValue}>{career.stats.winRate}%</Text>
+              <Text style={styles.metricLabel}>Victoires</Text>
+            </View>
+            <View style={styles.metric}>
+              <Text style={styles.metricValue}>{matchesPlayed}</Text>
+              <Text style={styles.metricLabel}>Matchs</Text>
+            </View>
+            <View style={styles.metric}>
+              <Text style={styles.metricValue}>{player.tournamentsWon}</Text>
+              <Text style={styles.metricLabel}>Titres</Text>
+            </View>
+          </View>
+        ) : null}
 
         {nextStep === 'SCENE' && (
           <PrimaryButton
@@ -150,6 +184,21 @@ export function HubScreen({ navigation, route }: Props) {
             label="Continuer l’histoire"
             onPress={() => navigation.navigate('Scene', { playerId })}
           />
+        )}
+        {nextStep === 'DAILY' && career && (
+          <View style={styles.dailyCard}>
+            <Text style={styles.cardEyebrow}>SÉRIE QUOTIDIENNE · {career.dailyReward.streak} J</Text>
+            <Text style={styles.cardTitle}>Prime du centre</Text>
+            <Text style={styles.cardCopy}>
+              Reviens chaque jour pour augmenter la prime, sans publicité ni achat.
+            </Text>
+            <PrimaryButton
+              variant="ball"
+              label={`Récupérer ${career.dailyReward.amount} €`}
+              onPress={claimDaily}
+              disabled={loading}
+            />
+          </View>
         )}
         {nextStep === 'TRAINING' && (
           <PrimaryButton
@@ -164,24 +213,45 @@ export function HubScreen({ navigation, route }: Props) {
             onPress={() => navigation.navigate('Match', { playerId })}
           />
         )}
-        {nextStep === 'DONE' && (
+        {career ? (
           <>
-            <Body>
-              Tu as fini le parcours de départ. Rejoue un match pour tester une
-              autre tactique, ou recommence une carrière depuis zéro.
-            </Body>
-            <PrimaryButton
-              variant="ball"
-              label="Rejouer un match"
-              onPress={startRematch}
-              disabled={loading}
-            />
-            <PrimaryButton
-              label="Voir la dernière récompense"
-              onPress={() => navigation.navigate('Reward', { playerId })}
-            />
+            <Text style={styles.sectionTitle}>Calendrier de la saison</Text>
+            {career.calendar.map((event) => (
+              <View
+                key={event.week}
+                style={[styles.event, event.status === 'NEXT' && styles.eventNext]}
+              >
+                <Text style={styles.eventWeek}>S{event.week}</Text>
+                <View style={styles.eventMain}>
+                  <Text style={styles.eventName}>{event.name}</Text>
+                  <Text style={styles.eventMeta}>{event.surface} · {event.tier}</Text>
+                </View>
+                <Text style={styles.eventStatus}>
+                  {event.status === 'PLAYED' ? '✓' : event.status === 'NEXT' ? 'À JOUER' : '•'}
+                </Text>
+              </View>
+            ))}
+
+            <Text style={styles.sectionTitle}>Staff</Text>
+            <View style={styles.staffCard}>
+              <View style={styles.staffCopy}>
+                <Text style={styles.cardTitle}>Coach niveau {career.staff.coachLevel}</Text>
+                <Text style={styles.cardCopy}>
+                  Bonus actuel : +{career.staff.trainingBonus} sur les gains principaux.
+                </Text>
+              </View>
+              {career.staff.upgradeCost ? (
+                <PrimaryButton
+                  label={`Améliorer · ${career.staff.upgradeCost} €`}
+                  onPress={upgradeCoach}
+                  disabled={loading}
+                />
+              ) : (
+                <Text style={styles.maxLevel}>NIVEAU MAX</Text>
+              )}
+            </View>
           </>
-        )}
+        ) : null}
         <PrimaryButton
           variant="secondary"
           label="Nouvelle carrière"
@@ -212,5 +282,105 @@ const styles = StyleSheet.create({
     color: colors.line,
     fontSize: 16,
     marginTop: 4,
+  },
+  dashboardRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  metric: {
+    flex: 1,
+    backgroundColor: colors.card,
+    padding: spacing.sm,
+    borderRadius: 4,
+    alignItems: 'center',
+  },
+  metricValue: {
+    fontFamily: fonts.display,
+    color: colors.brand,
+    fontSize: 20,
+  },
+  metricLabel: {
+    fontFamily: fonts.body,
+    color: colors.muted,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  dailyCard: {
+    backgroundColor: colors.brandDeep,
+    padding: spacing.md,
+    borderRadius: 4,
+    marginBottom: spacing.md,
+  },
+  cardEyebrow: {
+    fontFamily: fonts.bodyBold,
+    color: colors.ball,
+    fontSize: 11,
+    letterSpacing: 1,
+  },
+  cardTitle: {
+    fontFamily: fonts.display,
+    color: colors.brand,
+    fontSize: 18,
+    marginTop: 4,
+  },
+  cardCopy: {
+    fontFamily: fonts.body,
+    color: colors.muted,
+    lineHeight: 19,
+    marginTop: 4,
+  },
+  sectionTitle: {
+    fontFamily: fonts.display,
+    color: colors.brandDeep,
+    fontSize: 18,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  event: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    padding: spacing.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: 'rgba(11,61,46,0.15)',
+    marginBottom: 6,
+  },
+  eventNext: {
+    borderLeftColor: colors.ball,
+    backgroundColor: '#F4FAF6',
+  },
+  eventWeek: {
+    width: 30,
+    fontFamily: fonts.bodyBold,
+    color: colors.muted,
+  },
+  eventMain: { flex: 1 },
+  eventName: {
+    fontFamily: fonts.bodyBold,
+    color: colors.ink,
+  },
+  eventMeta: {
+    fontFamily: fonts.body,
+    color: colors.muted,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  eventStatus: {
+    fontFamily: fonts.bodyBold,
+    color: colors.brand,
+    fontSize: 11,
+  },
+  staffCard: {
+    backgroundColor: colors.card,
+    padding: spacing.md,
+    borderRadius: 4,
+    marginBottom: spacing.md,
+  },
+  staffCopy: { marginBottom: spacing.sm },
+  maxLevel: {
+    fontFamily: fonts.bodyBold,
+    color: colors.grass,
+    marginTop: spacing.sm,
   },
 });

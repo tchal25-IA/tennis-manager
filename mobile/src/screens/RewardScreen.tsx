@@ -24,7 +24,6 @@ export function RewardScreen({ navigation, route }: Props) {
   const [player, setPlayer] = useState<Player | null>(null);
   const [reward, setReward] = useState<MatchReward | null>(passed ?? null);
   const [timeline, setTimeline] = useState<MatchBeat[]>(passedTimeline ?? []);
-  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -52,18 +51,6 @@ export function RewardScreen({ navigation, route }: Props) {
   async function newCareer() {
     await AsyncStorage.removeItem('playerId');
     navigation.replace('Create');
-  }
-
-  async function rematch() {
-    try {
-      setBusy(true);
-      await api.rematch(playerId);
-      navigation.replace('Match', { playerId });
-    } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Rematch impossible');
-    } finally {
-      setBusy(false);
-    }
   }
 
   return (
@@ -96,12 +83,7 @@ export function RewardScreen({ navigation, route }: Props) {
         ))}
         <PrimaryButton
           variant="ball"
-          label={busy ? 'Préparation…' : 'Rejouer un match'}
-          onPress={rematch}
-          disabled={busy}
-        />
-        <PrimaryButton
-          label="Retour au hub"
+          label="Continuer la saison"
           onPress={() => navigation.replace('Hub', { playerId })}
         />
         <PrimaryButton

@@ -70,6 +70,7 @@ const KEYS = [
 export function MatchScreen({ navigation, route }: Props) {
   const { playerId } = route.params;
   const [surface, setSurface] = useState<(typeof SURFACES)[number]['id']>('CLAY');
+  const [tournament, setTournament] = useState('Prochain tournoi');
   const [preMatchTactic, setPreMatchTactic] =
     useState<(typeof TACTICS)[number]['id']>('COUNTER');
   const [rallyChoice, setRallyChoice] =
@@ -83,6 +84,17 @@ export function MatchScreen({ navigation, route }: Props) {
   const [visibleBeats, setVisibleBeats] = useState(0);
   const [loading, setLoading] = useState(false);
   const ticker = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    api.hub(playerId)
+      .then((hub) => {
+        setSurface(hub.upcomingTournament.surface);
+        setTournament(hub.upcomingTournament.name);
+      })
+      .catch((e) =>
+        Alert.alert('Erreur', e instanceof Error ? e.message : 'Calendrier indisponible'),
+      );
+  }, [playerId]);
 
   useEffect(() => {
     const anim = Animated.loop(
@@ -157,22 +169,21 @@ export function MatchScreen({ navigation, route }: Props) {
 
         <View style={styles.scoreboard}>
           <Animated.View style={[styles.ballTrace, { transform: [{ translateX: slide }] }]} />
-          <Text style={styles.scoreLabel}>TOURNOI JUNIOR · OPEN DE L’ACADÉMIE</Text>
+          <Text style={styles.scoreLabel}>SAISON JUNIOR · {tournament.toUpperCase()}</Text>
           <Text style={styles.scoreVersus}>Toi  vs  adversaire tiré au sort</Text>
         </View>
 
         {phase === 'PRE' && (
           <FadeIn>
-            <Text style={styles.label}>Surface du match</Text>
-            {SURFACES.map((s) => (
-              <Chip
-                key={s.id}
-                label={s.label}
-                description={s.description}
-                selected={surface === s.id}
-                onPress={() => setSurface(s.id)}
-              />
-            ))}
+            <Text style={styles.label}>Surface imposée par le calendrier</Text>
+            <View style={styles.surfaceCard}>
+              <Text style={styles.surfaceName}>
+                {SURFACES.find((item) => item.id === surface)?.label}
+              </Text>
+              <Text style={styles.surfaceDetail}>
+                {SURFACES.find((item) => item.id === surface)?.description}
+              </Text>
+            </View>
             <Text style={styles.label}>Tactique d’avant-match</Text>
             {TACTICS.map((s) => (
               <Chip
@@ -316,6 +327,23 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginBottom: 6,
     marginTop: spacing.sm,
+  },
+  surfaceCard: {
+    backgroundColor: colors.card,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.clay,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  surfaceName: {
+    fontFamily: fonts.bodyBold,
+    color: colors.brand,
+    fontSize: 15,
+  },
+  surfaceDetail: {
+    fontFamily: fonts.body,
+    color: colors.muted,
+    marginTop: 3,
   },
   moment: {
     fontFamily: fonts.display,
