@@ -135,14 +135,18 @@ const OPPONENT_POOL: Opponent[] = [
   },
 ];
 
-const TOURNAMENTS = [
-  'Open Junior Nice Côte d\'Azur',
-  'Tournoi des Espoirs Lyon',
-  'Challenger Junior Bordeaux',
-  'ITF Junior Paris',
-  'Coupe Junior Marseille',
-  'Trophée Junior Monaco',
-];
+const SEASON_WEEKS = [
+  { name: 'Open de Nice', surface: 'CLAY', major: false },
+  { name: 'Open d’Australie', surface: 'HARD', major: true },
+  { name: 'Masters de Monte-Carlo', surface: 'CLAY', major: false },
+  { name: 'Roland-Garros', surface: 'CLAY', major: true },
+  { name: 'Queen’s Club', surface: 'GRASS', major: false },
+  { name: 'Wimbledon', surface: 'GRASS', major: true },
+  { name: 'Masters de Toronto', surface: 'HARD', major: false },
+  { name: 'US Open', surface: 'HARD', major: true },
+  { name: 'Paris Masters', surface: 'HARD', major: false },
+  { name: 'Finales mondiales', surface: 'HARD', major: true },
+] as const;
 
 @Injectable()
 export class MatchService {
@@ -187,13 +191,19 @@ export class MatchService {
         ? availableOpponents[Math.floor(Math.random() * availableOpponents.length)]
         : OPPONENT_POOL[Math.floor(Math.random() * OPPONENT_POOL.length)];
 
-    const tournament =
-      TOURNAMENTS[Math.floor(Math.random() * TOURNAMENTS.length)];
+    const scheduled = SEASON_WEEKS[player.currentWeek - 1] ?? SEASON_WEEKS[0];
+    if (dto.surface !== scheduled.surface) {
+      throw new BadRequestException(
+        `Ce tournoi se joue sur ${scheduled.surface}`,
+      );
+    }
+    const tournament = scheduled.name;
     const rounds = ['1er tour', 'Quart de finale', 'Demi-finale', 'Finale'];
-    const round = rounds[Math.min(matchesPlayed, rounds.length - 1)];
+    const round = rounds[matchesPlayed % rounds.length];
 
     const surfaceBonus =
       dto.surface === player.preferredSurface ? 0.09 : -0.03;
+    const equipmentBonus = player.racket === 'PROSPIN_X' ? 0.045 : 0;
 
     const tacticMod =
       dto.preMatchTactic === 'AGGRESSIVE'
@@ -224,7 +234,7 @@ export class MatchService {
       form: player.form,
       fatigue: player.fatigue,
       surfaceBonus,
-      tacticMod,
+      tacticMod: tacticMod + equipmentBonus,
       keyMod,
       rng: playerRng,
     });
@@ -285,7 +295,7 @@ export class MatchService {
       {
         phase: 'WARMUP',
         title: 'Échauffement',
-        detail: `Premières balles échangées. Tu sens ${
+        detail: `Premières balles échangées${player.racket === 'PROSPIN_X' ? ' avec la ProSpin X, plus vive à l’impact' : ''}. Tu sens ${
           player.form > 75
             ? 'une belle frappe, la confiance est là'
             : player.form > 60
@@ -332,9 +342,17 @@ export class MatchService {
       },
     ];
 
-    const rewardCash = won
+    const sponsorBonus =
+      player.sponsor === 'COURTVISION'
+        ? 80
+        : player.sponsor === 'ACE' && won
+          ? 140
+          : player.sponsor === 'MAJOR' && scheduled.major
+            ? 220
+            : 0;
+    const rewardCash = (won
       ? 280 + Math.floor(player.celebrity * 2.5) + (close ? 40 : 0)
-      : 90 + Math.floor(player.celebrity);
+      : 90 + Math.floor(player.celebrity)) + sponsorBonus;
     const rewardCelebrity = won ? (close ? 7 : 5) : 2;
     const narrative = won
       ? close
@@ -342,16 +360,34 @@ export class MatchService {
         : `Maîtrise totale sur ${surfaceFr}. Tu bats ${opponent.name} (${sets}). Les recruteurs notent ton nom, la carrière décolle.`
       : `Défaite formative face à ${opponent.name} (${opponent.nationality}, ${sets}). Tu sens exactement ce qu'il faut travailler — le prochain match sera différent.`;
 
+    const nextWeek = player.currentWeek >= SEASON_WEEKS.length ? 1 : player.currentWeek + 1;
+    const nextSeason =
+      player.currentWeek >= SEASON_WEEKS.length
+        ? player.currentSeason + 1
+        : player.currentSeason;
+    const rankingGain = won ? (round === 'Finale' ? 24 : 14) : 4;
+
+    const matchFatigue = player.shoes === 'COURTFLY' ? 7 : 12;
+    const injuryTriggered = player.fatigue >= 65 && Math.random() < 0.22;
     const updated = await this.prisma.player.update({
       where: { id: player.id },
       data: {
         cash: player.cash + rewardCash,
         celebrity: clamp(player.celebrity + rewardCelebrity),
         morale: clamp(player.morale + (won ? 8 : -4)),
-        fatigue: clamp(player.fatigue + 12),
+        fatigue: clamp(player.fatigue + matchFatigue),
+        health: clamp(player.health - (injuryTriggered ? 18 : won ? 3 : 6)),
+        injury: injuryTriggered ? 'Contracture à l’épaule' : player.injury,
         form: clamp(player.form + (won ? 4 : -2)),
+        ranking: Math.max(1, player.ranking - rankingGain),
         tournamentsWon: won && round === 'Finale' ? player.tournamentsWon + 1 : player.tournamentsWon,
-        sliceDone: true,
+        grandSlams: won && scheduled.major && round === 'Finale' ? player.grandSlams + 1 : player.grandSlams,
+        rivalScore: clamp(player.rivalScore + (opponent.name === 'Lucas Vermeer' ? (won ? 10 : 6) : 1)),
+        currentWeek: nextWeek,
+        currentSeason: nextSeason,
+        careerStage: nextSeason >= 2 ? 'PRO ESPOIR' : player.careerStage,
+        trainingDone: false,
+        sliceDone: false,
       },
     });
 
@@ -398,6 +434,8 @@ export class MatchService {
         won,
         scoreline: sets,
         narrative,
+        sponsorBonus,
+        injury: injuryTriggered ? 'Contracture à l’épaule' : null,
       },
     };
   }

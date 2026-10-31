@@ -16,6 +16,21 @@ export type Player = {
   form: number;
   fatigue: number;
   careerStage: string;
+  currentSeason: number;
+  currentWeek: number;
+  ranking: number;
+  tournamentsWon: number;
+  grandSlams: number;
+  coachLevel: number;
+  physioLevel: number;
+  agentLevel: number;
+  health: number;
+  injury: string;
+  racket: string;
+  shoes: string;
+  sponsor: string;
+  rivalScore: number;
+  dailyStreak: number;
   sceneIndex: number;
   sliceDone: boolean;
 };
@@ -46,6 +61,8 @@ export type MatchReward = {
   won: boolean;
   scoreline: string;
   narrative: string;
+  sponsorBonus?: number;
+  injury?: string | null;
 };
 
 export type MatchBeat = {
@@ -56,7 +73,7 @@ export type MatchBeat = {
 
 export type HubResponse = {
   player: Player;
-  nextStep: 'SCENE' | 'TRAINING' | 'MATCH' | 'DONE';
+  nextStep: 'SCENE' | 'DAILY' | 'EVENT' | 'RECOVERY' | 'TRAINING' | 'MATCH';
   loopHint: string;
   matchesPlayed: number;
   canRematch: boolean;
@@ -68,9 +85,57 @@ export type HubResponse = {
     rewardCelebrity: number;
     opponentName?: string;
   } | null;
+  stats: {
+    wins: number;
+    losses: number;
+    winRate: number;
+    tournamentsWon: number;
+    currentSeason: number;
+  };
+  upcomingTournament: {
+    name: string;
+    surface: 'CLAY' | 'GRASS' | 'HARD';
+    tier: string;
+    major: boolean;
+  };
+  calendar: {
+    week: number;
+    name: string;
+    surface: string;
+    tier: string;
+    status: 'PLAYED' | 'NEXT' | 'LOCKED';
+    major: boolean;
+  }[];
+  dailyReward: { available: boolean; amount: number; streak: number };
+  staff: {
+    coachLevel: number;
+    trainingBonus: number;
+    upgradeCost: number | null;
+    physioLevel: number;
+    agentLevel: number;
+  };
+  weeklyEvent: {
+    title: string;
+    speaker: string;
+    body: string;
+    choices: { id: string; label: string }[];
+  } | null;
+  equipment: {
+    racket: string;
+    shoes: string;
+    offers: { id: string; label: string; slot: string; cost: number; bonus: string }[];
+  };
+  sponsors: { id: string; name: string; bonus: string; requirement: number }[];
+  rival: { name: string; score: number; status: string };
+  health: { value: number; injury: string; risk: string };
+  trophies: { titles: number; grandSlams: number; season: number };
 };
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001/api';
+const API_URL =
+  process.env.EXPO_PUBLIC_API_URL ??
+  (process.env.NODE_ENV === 'production'
+    ? 'https://tennis-manager-api-thibauds-projects-528bdc51.vercel.app/api'
+    : 'http://localhost:3001/api');
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
@@ -97,14 +162,56 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   createPlayer: (body: Record<string, string>) =>
-    request<Player>('/players', { method: 'POST', body: JSON.stringify(body) }),
+    request<Player>('/player', { method: 'POST', body: JSON.stringify(body) }),
 
-  getPlayer: (id: string) => request<Player>(`/players/${id}`),
+  getPlayer: (id: string) => request<Player>(`/player/${id}`),
 
   hub: (playerId: string) => request<HubResponse>(`/career/${playerId}/hub`),
 
   rematch: (playerId: string) =>
     request<HubResponse>(`/career/${playerId}/rematch`, { method: 'POST' }),
+
+  claimDaily: (playerId: string) =>
+    request<{ player: Player; amount: number; streak: number }>(
+      `/career/${playerId}/daily`,
+      { method: 'POST' },
+    ),
+
+  upgradeCoach: (playerId: string) =>
+    request<{ player: Player; cost: number; trainingBonus: number }>(
+      `/career/${playerId}/staff/coach`,
+      { method: 'POST' },
+    ),
+
+  resolveEvent: (playerId: string, choiceId: string) =>
+    request<{ player: Player; eventTitle: string; choiceLabel: string }>(
+      `/career/${playerId}/event`,
+      { method: 'POST', body: JSON.stringify({ choiceId }) },
+    ),
+
+  upgradeStaff: (playerId: string, role: 'coach' | 'physio' | 'agent') =>
+    request<{ player: Player; role: string; cost: number }>(
+      `/career/${playerId}/staff/${role}`,
+      { method: 'POST' },
+    ),
+
+  buyEquipment: (playerId: string, item: string) =>
+    request<{ player: Player; item: string; cost: number }>(
+      `/career/${playerId}/equipment`,
+      { method: 'POST', body: JSON.stringify({ item }) },
+    ),
+
+  signSponsor: (playerId: string, sponsor: string) =>
+    request<{ player: Player; sponsor: string }>(
+      `/career/${playerId}/sponsor`,
+      { method: 'POST', body: JSON.stringify({ sponsor }) },
+    ),
+
+  recover: (playerId: string) =>
+    request<{ player: Player; cost: number }>(
+      `/career/${playerId}/recover`,
+      { method: 'POST' },
+    ),
 
   currentScene: (playerId: string) =>
     request<{ done: boolean; player: Player; scene: Scene | null }>(
@@ -145,7 +252,7 @@ export const api = {
 
   doTraining: (body: {
     playerId: string;
-    trainingType: 'PHYSIQUE' | 'TECHNIQUE' | 'MENTAL';
+    trainingType: 'SERVE' | 'FOREHAND' | 'BACKHAND' | 'PHYSIQUE' | 'MENTAL';
   }) =>
     request<{ player: Player; trainingType: string }>('/training/do', {
       method: 'POST',

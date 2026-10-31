@@ -8,7 +8,15 @@ import { colors, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Training'>;
 
-type TrainingType = 'PHYSIQUE' | 'TECHNIQUE' | 'MENTAL';
+type TrainingType = 'SERVE' | 'FOREHAND' | 'BACKHAND' | 'PHYSIQUE' | 'MENTAL';
+
+const TRAININGS: { id: TrainingType; label: string; hint: string }[] = [
+  { id: 'SERVE', label: 'Service', hint: '+5 service · +2 technique · fatigue +12' },
+  { id: 'FOREHAND', label: 'Coup droit', hint: '+5 coup droit · +1 technique · fatigue +10' },
+  { id: 'BACKHAND', label: 'Revers', hint: '+5 revers · +2 endurance · fatigue +10' },
+  { id: 'PHYSIQUE', label: 'Physique', hint: '+4 endurance · +1 mental · fatigue +15' },
+  { id: 'MENTAL', label: 'Mental', hint: '+4 mental · +1 célébrité · fatigue +8' },
+];
 
 export function TrainingScreen({ navigation, route }: Props) {
   const { playerId } = route.params;
@@ -62,14 +70,23 @@ export function TrainingScreen({ navigation, route }: Props) {
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
         <Title>Entraînement</Title>
-        <Subtitle>Avant de jouer contre Lucas Vermeer, renforce tes points clés.</Subtitle>
+        <Subtitle>
+          Prépare le prochain tournoi. Les gains sont garantis et la fatigue est
+          affichée avant de choisir.
+        </Subtitle>
         {player ? <StatsBar player={player} /> : null}
 
         <Text style={styles.label}>Choisis un type d’entraînement</Text>
 
-        <ChoiceButton label={loading ? '...' : 'Physique'} onPress={() => choose('PHYSIQUE')} />
-        <ChoiceButton label={loading ? '...' : 'Technique'} onPress={() => choose('TECHNIQUE')} />
-        <ChoiceButton label={loading ? '...' : 'Mental'} onPress={() => choose('MENTAL')} />
+        {TRAININGS.map((training, index) => (
+          <ChoiceButton
+            key={training.id}
+            index={index}
+            label={loading ? '...' : training.label}
+            hint={`${training.hint}${player && player.coachLevel > 1 ? ` · coach +${player.coachLevel - 1}` : ''}`}
+            onPress={() => choose(training.id)}
+          />
+        ))}
 
         <Text style={styles.note}>
           La fatigue augmente après chaque séance. Ta performance au match dépendra aussi de ta forme.
