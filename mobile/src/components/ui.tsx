@@ -281,6 +281,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: spacing.lg,
+    width: '100%',
+    maxWidth: 1100,
+    alignSelf: 'center',
   },
   brand: {
     fontFamily: fonts.display,
@@ -324,7 +327,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brand,
     paddingVertical: 15,
     paddingHorizontal: 18,
-    borderRadius: 4,
+    borderRadius: 12,
     alignItems: 'center',
   },
   btnSecondary: {
@@ -349,7 +352,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(11,61,46,0.18)',
     padding: spacing.md,
-    borderRadius: 4,
+    borderRadius: 12,
     marginBottom: spacing.sm,
     borderLeftWidth: 4,
     borderLeftColor: colors.ball,
@@ -377,7 +380,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(11,61,46,0.25)',
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 4,
+    borderRadius: 10,
     marginRight: 8,
     marginBottom: 8,
     backgroundColor: colors.card,
@@ -407,7 +410,7 @@ const styles = StyleSheet.create({
   },
   stats: {
     backgroundColor: colors.card,
-    borderRadius: 4,
+    borderRadius: 14,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,

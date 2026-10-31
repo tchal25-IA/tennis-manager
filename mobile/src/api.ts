@@ -20,7 +20,16 @@ export type Player = {
   currentWeek: number;
   ranking: number;
   tournamentsWon: number;
+  grandSlams: number;
   coachLevel: number;
+  physioLevel: number;
+  agentLevel: number;
+  health: number;
+  injury: string;
+  racket: string;
+  shoes: string;
+  sponsor: string;
+  rivalScore: number;
   dailyStreak: number;
   sceneIndex: number;
   sliceDone: boolean;
@@ -52,6 +61,8 @@ export type MatchReward = {
   won: boolean;
   scoreline: string;
   narrative: string;
+  sponsorBonus?: number;
+  injury?: string | null;
 };
 
 export type MatchBeat = {
@@ -62,7 +73,7 @@ export type MatchBeat = {
 
 export type HubResponse = {
   player: Player;
-  nextStep: 'SCENE' | 'DAILY' | 'TRAINING' | 'MATCH';
+  nextStep: 'SCENE' | 'DAILY' | 'EVENT' | 'RECOVERY' | 'TRAINING' | 'MATCH';
   loopHint: string;
   matchesPlayed: number;
   canRematch: boolean;
@@ -85,6 +96,7 @@ export type HubResponse = {
     name: string;
     surface: 'CLAY' | 'GRASS' | 'HARD';
     tier: string;
+    major: boolean;
   };
   calendar: {
     week: number;
@@ -92,13 +104,31 @@ export type HubResponse = {
     surface: string;
     tier: string;
     status: 'PLAYED' | 'NEXT' | 'LOCKED';
+    major: boolean;
   }[];
   dailyReward: { available: boolean; amount: number; streak: number };
   staff: {
     coachLevel: number;
     trainingBonus: number;
     upgradeCost: number | null;
+    physioLevel: number;
+    agentLevel: number;
   };
+  weeklyEvent: {
+    title: string;
+    speaker: string;
+    body: string;
+    choices: { id: string; label: string }[];
+  } | null;
+  equipment: {
+    racket: string;
+    shoes: string;
+    offers: { id: string; label: string; slot: string; cost: number; bonus: string }[];
+  };
+  sponsors: { id: string; name: string; bonus: string; requirement: number }[];
+  rival: { name: string; score: number; status: string };
+  health: { value: number; injury: string; risk: string };
+  trophies: { titles: number; grandSlams: number; season: number };
 };
 
 const API_URL =
@@ -150,6 +180,36 @@ export const api = {
   upgradeCoach: (playerId: string) =>
     request<{ player: Player; cost: number; trainingBonus: number }>(
       `/career/${playerId}/staff/coach`,
+      { method: 'POST' },
+    ),
+
+  resolveEvent: (playerId: string, choiceId: string) =>
+    request<{ player: Player; eventTitle: string; choiceLabel: string }>(
+      `/career/${playerId}/event`,
+      { method: 'POST', body: JSON.stringify({ choiceId }) },
+    ),
+
+  upgradeStaff: (playerId: string, role: 'coach' | 'physio' | 'agent') =>
+    request<{ player: Player; role: string; cost: number }>(
+      `/career/${playerId}/staff/${role}`,
+      { method: 'POST' },
+    ),
+
+  buyEquipment: (playerId: string, item: string) =>
+    request<{ player: Player; item: string; cost: number }>(
+      `/career/${playerId}/equipment`,
+      { method: 'POST', body: JSON.stringify({ item }) },
+    ),
+
+  signSponsor: (playerId: string, sponsor: string) =>
+    request<{ player: Player; sponsor: string }>(
+      `/career/${playerId}/sponsor`,
+      { method: 'POST', body: JSON.stringify({ sponsor }) },
+    ),
+
+  recover: (playerId: string) =>
+    request<{ player: Player; cost: number }>(
+      `/career/${playerId}/recover`,
       { method: 'POST' },
     ),
 
